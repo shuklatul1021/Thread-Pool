@@ -27,8 +27,27 @@ void *thread_function(void *threadpool){
     threadpool_t *pool = (threadpool_t*)threadpool;
 
     while(1){
-        
+        pthread_mutex_lock(&(pool->lock));
+
+        while(pool->queue == 0 && !pool->stop){
+            pthread_cond_wait(&(pool->notify) , &(pool->lock));
+        }
+
+        if(thread->stop){
+            pthread_mutex_unlock(&(pool->lock));
+            pthread_exit(NULL);
+        }
+
+        task_t task = pool->task_queue[pool->queue_front];
+        pool->queue_front = (pool->queue_front + 1) % QUEUE_SIZE;
+        pool->queue--;
+
+        pthread_mutex_unlock(&(pool->lock));
+
+        (*(task.function))(task.arg)
     }
+
+    return NULL:
 
 }
 
