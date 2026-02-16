@@ -33,7 +33,7 @@ void *thread_function(void *threadpool){
             pthread_cond_wait(&(pool->notify) , &(pool->lock));
         }
 
-        if(thread->stop){
+        if(pool->stop){
             pthread_mutex_unlock(&(pool->lock));
             pthread_exit(NULL);
         }
@@ -44,11 +44,10 @@ void *thread_function(void *threadpool){
 
         pthread_mutex_unlock(&(pool->lock));
 
-        (*(task.function))(task.arg)
+        (*(task.fn))(task.arg);
     }
 
-    return NULL:
-
+    return NULL;
 }
 
 
@@ -66,7 +65,24 @@ void thread_pool_init(threadpool_t *pool){
     }
 }
 
+
+void thread_distroy(threadpool_t *pool){
+    pthread_mutex_lock(&(pool->lock));
+    pool->stop = 1;
+    pthread_cond_broadcast(&(pool->notify));
+    pthread_mutex_unlock(&(pool->lock));
+ 
+
+    for(int i = 0 ; i < THREAD ; i++){
+        pthread_join(pool->thread[i] , NULL);
+    }
+
+    pthread_mutex_distroy(&(pool->lock));
+    pthread_cond_distroy(&(pool->notify));
+}
+
 int main(){
-    thread_pool_init();
+    threadpool_t pool;
+    thread_pool_init(&pool);
 
 }
